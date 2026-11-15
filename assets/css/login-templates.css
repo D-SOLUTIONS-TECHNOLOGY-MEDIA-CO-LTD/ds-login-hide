@@ -1,0 +1,191 @@
+/**
+ * DS Hide Login – template trang đăng nhập.
+ * Màu lấy từ CSS variables do plugin in inline (--ds-*), template chọn qua class body.ds-tpl-*.
+ */
+
+/* ---------- Dùng chung cho mọi template ---------- */
+body.login {
+	background-color: var(--ds-bg, #f1f5f9);
+	color: var(--ds-text, #0f172a);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.login form {
+	background: var(--ds-form-bg, #fff);
+	border: 0;
+	border-radius: var(--ds-radius, 12px);
+	box-shadow: 0 10px 30px rgba(15, 23, 42, .08);
+	padding: 28px 28px 32px;
+}
+
+.login label,
+.login form .forgetmenot label {
+	color: var(--ds-text, #0f172a);
+}
+
+.login input[type="text"],
+.login input[type="password"],
+.login input[type="email"] {
+	border-radius: calc(var(--ds-radius, 12px) / 2);
+	border: 1px solid rgba(15, 23, 42, .15);
+	padding: 6px 12px;
+	font-size: 16px;
+	box-shadow: none;
+}
+
+.login input[type="text"]:focus,
+.login input[type="password"]:focus,
+.login input[type="email"]:focus {
+	border-color: var(--ds-primary, #2563eb);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--ds-primary, #2563eb) 20%, transparent);
+}
+
+.login .button-primary,
+.wp-core-ui .button-primary {
+	background: var(--ds-primary, #2563eb);
+	border-color: var(--ds-primary, #2563eb);
+	color: var(--ds-btn-text, #fff);
+	border-radius: calc(var(--ds-radius, 12px) / 2);
+	text-shadow: none;
+	box-shadow: none;
+	transition: filter .15s ease;
+}
+
+.login .button-primary:hover,
+.login .button-primary:focus,
+.wp-core-ui .button-primary:hover,
+.wp-core-ui .button-primary:focus {
+	background: var(--ds-primary, #2563eb);
+	border-color: var(--ds-primary, #2563eb);
+	color: var(--ds-btn-text, #fff);
+	filter: brightness(.92);
+}
+
+.login .button.wp-hide-pw .dashicons,
+.login #nav a,
+.login #backtoblog a,
+.login .privacy-policy-link {
+	color: var(--ds-text, #0f172a);
+}
+
+.login #nav a:hover,
+.login #backtoblog a:hover {
+	color: var(--ds-primary, #2563eb);
+}
+
+.login .message,
+.login .notice,
+.login .success,
+.login #login_error {
+	border-left-color: var(--ds-primary, #2563eb);
+	border-radius: calc(var(--ds-radius, 12px) / 2);
+}
+
+.ds-login-footer {
+	text-align: center;
+	font-size: 13px;
+	opacity: .75;
+	padding: 16px;
+}
+
+/* ---------- Classic: thẻ giữa màn hình ---------- */
+body.ds-tpl-classic {
+	background-image: var(--ds-bg-image, none);
+	background-size: cover;
+	background-position: center;
+}
+
+body.ds-tpl-classic #login {
+	width: 360px;
+	padding-top: 8vh;
+}
+
+/* ---------- Split: panel thương hiệu bên trái, form bên phải ---------- */
+body.ds-tpl-split {
+	background: var(--ds-form-bg, #fff);
+}
+
+body.ds-tpl-split::before {
+	content: "";
+	position: fixed;
+	inset: 0 50% 0 0;
+	background-color: var(--ds-primary, #2563eb);
+	background-image: var(--ds-bg-image, none);
+	background-size: cover;
+	background-position: center;
+}
+
+body.ds-tpl-split #login {
+	position: relative;
+	width: 360px;
+	margin: 0 0 0 auto;
+	margin-right: calc(25% - 180px);
+	padding-top: 12vh;
+}
+
+body.ds-tpl-split .login form {
+	box-shadow: none;
+	padding-left: 0;
+	padding-right: 0;
+}
+
+body.ds-tpl-split .language-switcher,
+body.ds-tpl-split .ds-login-footer {
+	position: relative;
+	margin-left: 50%;
+}
+
+@media (max-width: 782px) {
+	body.ds-tpl-split::before {
+		inset: 0 0 auto 0;
+		height: 160px;
+	}
+
+	body.ds-tpl-split #login {
+		margin: 0 auto;
+		padding-top: 40px;
+	}
+
+	body.ds-tpl-split .language-switcher,
+	body.ds-tpl-split .ds-login-footer {
+		margin-left: 0;
+	}
+}
+
+/* ---------- Glass: nền ảnh/gradient, form kính mờ ---------- */
+body.ds-tpl-glass {
+	background-color: var(--ds-bg, #0f172a);
+	background-image: var(--ds-bg-image, none),
+		linear-gradient(135deg, var(--ds-primary, #2563eb), var(--ds-bg, #0f172a));
+	background-size: cover;
+	background-position: center;
+	background-attachment: fixed;
+	min-height: 100vh;
+}
+
+body.ds-tpl-glass #login {
+	width: 380px;
+	padding-top: 10vh;
+}
+
+body.ds-tpl-glass .login form {
+	background: color-mix(in srgb, var(--ds-form-bg, #fff) 18%, transparent);
+	-webkit-backdrop-filter: blur(16px);
+	backdrop-filter: blur(16px);
+	border: 1px solid rgba(255, 255, 255, .25);
+	box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+}
+
+body.ds-tpl-glass .login input[type="text"],
+body.ds-tpl-glass .login input[type="password"],
+body.ds-tpl-glass .login input[type="email"] {
+	background: rgba(255, 255, 255, .85);
+}
+
+body.ds-tpl-glass .login label,
+body.ds-tpl-glass .login #nav a,
+body.ds-tpl-glass .login #backtoblog a,
+body.ds-tpl-glass .login .privacy-policy-link,
+body.ds-tpl-glass .ds-login-footer {
+	color: var(--ds-text, #fff);
+}
