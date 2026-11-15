@@ -97,7 +97,12 @@ $constants = DS_Hide_Login_Options::captcha_key_constants();
 	<tr>
 		<th scope="row"><label for="ds_lockout_minutes"><?php esc_html_e( 'Thời gian khoá (phút)', 'ds-hide-login' ); ?></label></th>
 		<td><input id="ds_lockout_minutes" type="number" min="1" max="1440" class="small-text" name="<?php echo esc_attr( $pname ); ?>[lockout_minutes]" value="<?php echo esc_attr( $p['lockout_minutes'] ); ?>">
-			<p class="description"><?php esc_html_e( 'Số lần sai được đếm trong cùng khoảng thời gian này. Áp dụng cho cả XML-RPC và form login WooCommerce.', 'ds-hide-login' ); ?></p></td>
+			<p class="description"><?php esc_html_e( 'Số lần sai được đếm trong cùng khoảng thời gian này. Áp dụng cho cả XML-RPC và form login WooCommerce. IPv6 được tính theo cả dải /64.', 'ds-hide-login' ); ?></p></td>
+	</tr>
+	<tr>
+		<th scope="row"><?php esc_html_e( 'XML-RPC', 'ds-hide-login' ); ?></th>
+		<td><?php $checkbox( 'disable_xmlrpc', __( 'Tắt đăng nhập qua XML-RPC (xmlrpc.php)', 'ds-hide-login' ) ); ?>
+			<p class="description"><?php esc_html_e( 'XML-RPC không có captcha nên là đường brute force phổ biến. Chỉ bật tuỳ chọn này khi site KHÔNG dùng app WordPress trên điện thoại, Jetpack hoặc công cụ đăng bài từ xa. Pingback vẫn hoạt động.', 'ds-hide-login' ); ?></p></td>
 	</tr>
 </table>
 

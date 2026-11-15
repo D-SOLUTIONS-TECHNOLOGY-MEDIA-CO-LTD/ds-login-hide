@@ -15,6 +15,7 @@ class DS_Hide_Login_Options {
 	const OPT_APPEARANCE = 'ds_hide_login_appearance';
 	const OPT_PROTECTION = 'ds_hide_login_protection';
 	const OPT_LOCKOUTS   = 'ds_hide_login_lockouts';
+	const OPT_HIDE_LINKS = 'ds_hide_login_hide_links';
 
 	/** Danh sách template login hợp lệ: key => nhãn. */
 	public static function templates() {
@@ -100,6 +101,7 @@ class DS_Hide_Login_Options {
 			'captcha_lostpass'     => 1,
 			'captcha_register'     => 1,
 			'captcha_woocommerce'  => 1,
+			'disable_xmlrpc'       => 0, // mặc định giữ XML-RPC vì app/Jetpack của khách có thể cần
 		);
 	}
 
@@ -116,7 +118,7 @@ class DS_Hide_Login_Options {
 	public static function ip_sources() {
 		return array(
 			'auto'        => __( 'Tự động – dùng IP thật từ Cloudflare khi request đến từ dải IP của Cloudflare (khuyên dùng)', 'ds-hide-login' ),
-			'cloudflare'  => __( 'Luôn tin header CF-Connecting-IP – chỉ dùng khi server CHỈ nhận traffic qua Cloudflare (vd. Cloudflare Tunnel)', 'ds-hide-login' ),
+			'cloudflare'  => __( 'Cloudflare Tunnel – tin thêm header CF-Connecting-IP khi request đến từ máy chủ / mạng nội bộ (cloudflared). Chỉ dùng khi server KHÔNG nhận traffic trực tiếp qua proxy nội bộ khác', 'ds-hide-login' ),
 			'remote_addr' => __( 'Chỉ dùng REMOTE_ADDR – site không dùng Cloudflare/proxy', 'ds-hide-login' ),
 		);
 	}
@@ -159,6 +161,11 @@ class DS_Hide_Login_Options {
 		}
 
 		return $o;
+	}
+
+	/** Ẩn URL đăng nhập khỏi link công khai (bình luận, widget Meta, link đăng ký) cho khách. Mặc định bật. */
+	public static function hide_links() {
+		return (bool) get_option( self::OPT_HIDE_LINKS, 1 );
 	}
 
 	public static function slug_locked() {

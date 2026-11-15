@@ -35,7 +35,7 @@ $unlock   = function ( $ip, $label, $class ) {
 <?php else : ?>
 	<table class="widefat striped" style="max-width:720px">
 		<thead><tr>
-			<th>IP</th>
+			<th><?php esc_html_e( 'IP / dải IPv6', 'ds-hide-login' ); ?></th>
 			<th><?php esc_html_e( 'Bị khoá lúc', 'ds-hide-login' ); ?></th>
 			<th><?php esc_html_e( 'Mở khoá lúc', 'ds-hide-login' ); ?></th>
 			<th></th>

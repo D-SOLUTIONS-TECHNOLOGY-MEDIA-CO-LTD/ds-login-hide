@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       DS Hide Login
  * Description:       Đổi URL đăng nhập, chặn wp-login.php & wp-admin, giới hạn đăng nhập sai (nhận IP thật qua Cloudflare), reCAPTCHA / Cloudflare Turnstile, logo thương hiệu (login + admin bar) và template trang login (Classic / Split / Glass) với màu tuỳ chỉnh.
- * Version:           1.2.0
+ * Version:           1.2.1
  * Author:            D-Solutions
  * Requires at least: 5.3
  * Requires PHP:      7.0
@@ -15,7 +15,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'DS_HIDE_LOGIN_VERSION', '1.2.0' );
+define( 'DS_HIDE_LOGIN_VERSION', '1.2.1' );
 define( 'DS_HIDE_LOGIN_FILE', __FILE__ );
 define( 'DS_HIDE_LOGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DS_HIDE_LOGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -25,6 +25,7 @@ require_once DS_HIDE_LOGIN_DIR . 'includes/class-ds-hide-login-options.php';
 require_once DS_HIDE_LOGIN_DIR . 'includes/class-ds-hide-login-core.php';
 require_once DS_HIDE_LOGIN_DIR . 'includes/class-ds-hide-login-appearance.php';
 require_once DS_HIDE_LOGIN_DIR . 'includes/class-ds-hide-login-client-ip.php';
+require_once DS_HIDE_LOGIN_DIR . 'includes/class-ds-hide-login-counter.php';
 require_once DS_HIDE_LOGIN_DIR . 'includes/class-ds-hide-login-limit-login.php';
 require_once DS_HIDE_LOGIN_DIR . 'includes/class-ds-hide-login-captcha.php';
 require_once DS_HIDE_LOGIN_DIR . 'includes/class-ds-hide-login-settings.php';
@@ -46,10 +47,20 @@ function ds_hide_login_bootstrap() {
 		return;
 	}
 
+	// Bộ đếm đăng nhập sai dùng chung cho cả network (multisite) khi có object cache.
+	if ( function_exists( 'wp_cache_add_global_groups' ) ) {
+		wp_cache_add_global_groups( array( DS_Hide_Login_Counter::GROUP ) );
+	}
+
 	new DS_Hide_Login_Core();
 	new DS_Hide_Login_Appearance();
 	new DS_Hide_Login_Limit_Login();
 	new DS_Hide_Login_Captcha();
+
+	// Tắt các method XML-RPC cần đăng nhập (pingback vẫn chạy) – chặn brute force qua xmlrpc.php.
+	if ( DS_Hide_Login_Options::protection()['disable_xmlrpc'] ) {
+		add_filter( 'xmlrpc_enabled', '__return_false' );
+	}
 
 	if ( is_admin() ) {
 		new DS_Hide_Login_Settings();

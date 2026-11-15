@@ -59,7 +59,11 @@ class DS_Hide_Login_Client_IP {
 		$source = DS_Hide_Login_Options::protection()['ip_source'];
 		$cf     = self::cloudflare_header();
 
-		if ( $cf && ( 'cloudflare' === $source || ( 'auto' === $source && self::is_cloudflare( $remote ) ) ) ) {
+		// "cloudflare": tin thêm request từ mạng nội bộ/loopback (cloudflared chạy cùng máy/mạng nội bộ),
+		// nhưng KHÔNG tin request từ IP public lạ – chặn giả mạo header khi origin lộ IP.
+		$trusted = self::is_cloudflare( $remote ) || ( 'cloudflare' === $source && self::is_internal( $remote ) );
+
+		if ( $cf && 'remote_addr' !== $source && $trusted ) {
 			$ip = $cf;
 		}
 
@@ -68,9 +72,40 @@ class DS_Hide_Login_Client_IP {
 		return filter_var( $ip, FILTER_VALIDATE_IP ) ? $ip : '0.0.0.0';
 	}
 
+	/** IP loopback / mạng riêng / dải dành riêng (127.0.0.1, 10.x, 172.16-31.x, 192.168.x, ::1, fc00::/7...). */
+	public static function is_internal( $ip ) {
+		return $ip && filter_var( $ip, FILTER_VALIDATE_IP )
+			&& ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+	}
+
+	/**
+	 * Đơn vị để đếm/khoá đăng nhập sai: IPv4 giữ nguyên; IPv6 gộp theo dải /64
+	 * (mỗi thuê bao IPv6 thường được cấp nguyên /64 – xoay địa chỉ trong đó không vượt được giới hạn).
+	 */
+	public static function bucket( $ip ) {
+		$bin = @inet_pton( (string) $ip ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+
+		if ( false === $bin || 16 !== strlen( $bin ) ) {
+			return (string) $ip;
+		}
+
+		// IPv4-mapped (::ffff:a.b.c.d) → coi như IPv4, tránh gộp mọi IPv4 vào chung 1 dải.
+		if ( str_repeat( "\0", 10 ) . "\xff\xff" === substr( $bin, 0, 12 ) ) {
+			return inet_ntop( substr( $bin, 12 ) );
+		}
+
+		return inet_ntop( substr( $bin, 0, 8 ) . str_repeat( "\0", 8 ) ) . '/64';
+	}
+
 	public static function is_cloudflare( $ip ) {
 		if ( ! $ip ) {
 			return false;
+		}
+
+		// Socket dual-stack báo IPv4 dạng ::ffff:a.b.c.d → đưa về IPv4 để so với dải IPv4.
+		$normalized = self::bucket( $ip );
+		if ( false === strpos( $normalized, '/' ) ) {
+			$ip = $normalized;
 		}
 
 		foreach ( (array) apply_filters( 'ds_hide_login_cloudflare_ranges', self::CLOUDFLARE_RANGES ) as $cidr ) {

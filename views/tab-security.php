@@ -32,4 +32,13 @@ defined( 'ABSPATH' ) || exit;
 					<p class="description"><?php esc_html_e( 'Nơi đưa khách tới khi họ cố vào wp-login.php hoặc wp-admin.', 'ds-hide-login' ); ?></p>
 				</td>
 			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Link công khai', 'ds-hide-login' ); ?></th>
+				<td>
+					<input type="hidden" name="<?php echo esc_attr( DS_Hide_Login_Options::OPT_HIDE_LINKS ); ?>" value="0">
+					<label><input type="checkbox" name="<?php echo esc_attr( DS_Hide_Login_Options::OPT_HIDE_LINKS ); ?>" value="1" <?php checked( DS_Hide_Login_Options::hide_links() ); ?>>
+						<?php esc_html_e( 'Không để lộ URL đăng nhập trong link hiển thị cho khách', 'ds-hide-login' ); ?></label>
+					<p class="description"><?php esc_html_e( 'Link "Đăng nhập để bình luận", widget Meta, link Đăng ký… sẽ trỏ tới trang Tài khoản WooCommerce (nếu có) hoặc trang chủ thay vì URL đăng nhập mới.', 'ds-hide-login' ); ?></p>
+				</td>
+			</tr>
 		</table>

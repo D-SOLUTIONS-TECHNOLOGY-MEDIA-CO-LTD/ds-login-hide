@@ -23,6 +23,9 @@ class DS_Hide_Login_Captcha {
 	/** @var array [site_key, secret_key] */
 	private $keys;
 
+	/** @var WP_Error|null Lỗi captcha của form login trong request này. */
+	private $login_error = null;
+
 	public function __construct() {
 		$this->opt      = DS_Hide_Login_Options::protection();
 		$this->provider = $this->opt['captcha_provider'];
@@ -33,7 +36,10 @@ class DS_Hide_Login_Captcha {
 		}
 
 		add_action( 'login_form', array( $this, 'render' ) );
-		add_filter( 'authenticate', array( $this, 'verify_login' ), 98 );
+		// 15: kiểm tra trước bước kiểm tra mật khẩu (20) để bỏ qua băm mật khẩu khi captcha sai;
+		// 98: chốt lại lỗi, vì bộ lọc mật khẩu của WP / plugin khác bỏ qua WP_Error truyền vào.
+		add_filter( 'authenticate', array( $this, 'verify_login' ), 15 );
+		add_filter( 'authenticate', array( $this, 'enforce_login' ), 98 );
 
 		if ( $this->opt['captcha_lostpass'] ) {
 			add_action( 'lostpassword_form', array( $this, 'render' ) );
@@ -119,7 +125,7 @@ class DS_Hide_Login_Captcha {
 		}
 
 		$response = wp_remote_post( $s['verify'], array(
-			'timeout' => 10,
+			'timeout' => 5,
 			'body'    => array(
 				'secret'   => $this->keys[1],
 				'response' => $token,
@@ -135,12 +141,41 @@ class DS_Hide_Login_Captcha {
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
-		if ( empty( $body['success'] ) ) {
+		if ( empty( $body['success'] ) || ! $this->hostname_ok( $body ) ) {
 			/* translators: %s: tên dịch vụ captcha */
 			return new WP_Error( 'ds_captcha_invalid', sprintf( __( '<strong>Lỗi:</strong> Xác minh %s không hợp lệ, vui lòng thử lại.', 'ds-hide-login' ), $s['name'] ) );
 		}
 
 		return true;
+	}
+
+	/**
+	 * Tuỳ chọn: token phải được giải trên đúng hostname (chặn token lấy từ site khác dùng chung key).
+	 * Mặc định TẮT vì site có alias / domain mapping / wildcard key sẽ bị chặn nhầm; Google ("Verify origin")
+	 * và Turnstile (danh sách hostname của widget) đã kiểm tra phía dịch vụ.
+	 * Bật: add_filter( 'ds_hide_login_captcha_check_hostname', '__return_true' ).
+	 */
+	private function hostname_ok( $body ) {
+		if ( ! apply_filters( 'ds_hide_login_captcha_check_hostname', false, $this->provider ) ) {
+			return true;
+		}
+
+		$hosts = array();
+		foreach ( array( home_url(), site_url() ) as $url ) {
+			$host = preg_replace( '/^www\./', '', strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) ) );
+			if ( $host ) {
+				$hosts[] = $host;
+				$hosts[] = 'www.' . $host; // site mở được bằng cả có và không có www
+			}
+		}
+		$hosts = array_values( array_unique( $hosts ) );
+		$hosts = (array) apply_filters( 'ds_hide_login_captcha_hostnames', $hosts, $this->provider );
+
+		if ( ! $hosts || empty( $body['hostname'] ) ) {
+			return true;
+		}
+
+		return in_array( strtolower( $body['hostname'] ), $hosts, true );
 	}
 
 	private function is_wp_login() {
@@ -149,13 +184,25 @@ class DS_Hide_Login_Captcha {
 
 	/** Form login wp-login (field "log"); kênh khác (XML-RPC, WooCommerce...) không xử lý ở đây. */
 	public function verify_login( $user ) {
+		$this->login_error = null;
+
 		if ( ! $this->is_wp_login() || ! isset( $_POST['log'] ) ) {
 			return $user;
 		}
 
 		$result = $this->verify();
+		if ( true === $result ) {
+			return $user;
+		}
 
-		return true === $result ? $user : $result;
+		$this->login_error = $result;
+		DS_Hide_Login_Limit_Login::skip_password_check();
+
+		return $result;
+	}
+
+	public function enforce_login( $user ) {
+		return $this->login_error ? $this->login_error : $user;
 	}
 
 	/** Quên mật khẩu: form wp-login, hoặc form WooCommerce khi bật captcha cho WooCommerce. */

@@ -39,6 +39,11 @@ class DS_Hide_Login_Settings {
 	public function register() {
 		register_setting( self::GROUP_SECURITY, DS_Hide_Login_Options::OPT_SLUG, array( 'sanitize_callback' => array( $this, 'sanitize_slug' ) ) );
 		register_setting( self::GROUP_SECURITY, DS_Hide_Login_Options::OPT_REDIRECT, array( 'sanitize_callback' => 'sanitize_title_with_dashes' ) );
+		register_setting( self::GROUP_SECURITY, DS_Hide_Login_Options::OPT_HIDE_LINKS, array(
+			'sanitize_callback' => function ( $value ) {
+				return empty( $value ) ? 0 : 1;
+			},
+		) );
 		register_setting( self::GROUP_LOOK, DS_Hide_Login_Options::OPT_APPEARANCE, array( 'sanitize_callback' => array( $this, 'sanitize_appearance' ) ) );
 		register_setting( self::GROUP_PROTECT, DS_Hide_Login_Options::OPT_PROTECTION, array( 'sanitize_callback' => array( $this, 'sanitize_protection' ) ) );
 	}
@@ -48,7 +53,7 @@ class DS_Hide_Login_Settings {
 		$old   = get_option( DS_Hide_Login_Options::OPT_PROTECTION, array() );
 		$out   = array();
 
-		foreach ( array( 'limit_enabled', 'captcha_lostpass', 'captcha_register', 'captcha_woocommerce' ) as $key ) {
+		foreach ( array( 'limit_enabled', 'captcha_lostpass', 'captcha_register', 'captcha_woocommerce', 'disable_xmlrpc' ) as $key ) {
 			$out[ $key ] = empty( $input[ $key ] ) ? 0 : 1;
 		}
 
@@ -94,6 +99,7 @@ class DS_Hide_Login_Settings {
 
 		$ip = isset( $_POST['ip'] ) ? sanitize_text_field( wp_unslash( $_POST['ip'] ) ) : '';
 		DS_Hide_Login_Limit_Login::unlock( $ip );
+		do_action( 'ds_hide_login_admin_unlocked', $ip, get_current_user_id() );
 
 		wp_safe_redirect( add_query_arg( 'ds-unlocked', 1, self::page_url( 'protection' ) ) );
 		exit;
